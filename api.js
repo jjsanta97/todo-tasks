@@ -1,13 +1,14 @@
 var mongoose = require("mongoose");
 var express = require("express");
 var router = express.Router();
+var TaskModel = require("./task_schema");
 
 let environment = null;
 
 if (!process.env.ON_RENDER) {
     console.log("Cargando variables de entorno desde archivo");
-    const env = require('node-env-file');
-    env(__dirname + '/.env');
+    const env = require("node-env-file");
+    env(__dirname + "/.env");
 }
 
 environment = {
@@ -17,10 +18,17 @@ environment = {
     DBMONGO: process.env.DBMONGO,
 };
 
-var query = 'mongodb+srv://' + environment.DBMONGOUSER + ':' + environment.DBMONGOPASS + '@' + environment.DBMONGOSERV + '/' + environment.DBMONGO + '?retryWrites=true&w=majority&appName=Cluster0';
+var query =
+    "mongodb+srv://" +
+    environment.DBMONGOUSER +
+    ":" +
+    environment.DBMONGOPASS +
+    "@" +
+    environment.DBMONGOSERV +
+    "/" +
+    environment.DBMONGO +
+    "?retryWrites=true&w=majority&appName=Cluster0";
 
-
-//var query = "mongodb+srv://juansanta97:MTCtYX8bhs27ERNC@cluster0.qodej.mongodb.net/taskDB?retryWrites=true&w=majority&appName=Cluster0";
 const db = query;
 
 mongoose.Promise = global.Promise;
@@ -39,5 +47,27 @@ mongoose.connect(
         }
     }
 );
+
+router.post("/create-task", function (req, res) {
+    let task_id = req.body.TaskId;
+    let name = req.body.Name;
+    let deadline = req.body.Deadline;
+
+    let task = {
+        TaskId: task_id,
+        Name: name,
+        Deadline: deadline,
+    };
+    var newTask = new TaskModel(task);
+
+    newTask.save(function (err, data) {
+        if (err) {
+            console.log(err);
+            res.status(500).send("Internal error\n");
+        } else {
+            res.status(200).send("OK\n");
+        }
+    });
+});
 
 module.exports = router;
